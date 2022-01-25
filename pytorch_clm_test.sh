@@ -1,37 +1,30 @@
 #!/bin/bash
-#SBATCH --nodes=2 --ntasks=2 --cpus-per-task=40 -p gputest --gres=gpu:v100:4,nvme:200 -t 00:15:00
+#SBATCH --nodes=2 --ntasks=2 --cpus-per-task=40 -p gpumedium --gres=gpu:a100:4,nvme:1000 -t 00:15:00
 #SBATCH -A dac
 
 # Preparation:
-# git clone https://github.com/huggingface/transformersw
-# pip install --user datasets
-
-# Containers created like this:
-# https://github.com/CSCfi/csc-env-guide/blob/ml-env/docs/apps/ml-env/singularity/pytorch_1.9.0_csc_custom2.def
-
-# module purge
-# module load pytorch
+# git clone https://github.com/huggingface/transformers
+# pip install --user datasets transformers   #  just to get dependencies
 
 export SINGULARITYENV_PYTHONPATH=$(pwd P)/transformers/src/
 
-# export NCCL_DEBUG=INFO
-# export TORCH_DISTRIBUTED_DEBUG=INFO
+# first commit with fast multi-node
+#SING_IMAGE=/scratch/project_2001659/mvsjober/singularity/pytorch_custom_3957ed4.sif
 
-# date
-# hostname
+# first commit with regression
+#SING_IMAGE=/scratch/project_2001659/mvsjober/singularity/pytorch_custom_38ac9e6.sif
+
+if [ -z $SING_IMAGE ]; then
+    echo "You must define singularity image with SING_IMAGE"
+    exit 1
+fi
+
+SING_FLAGS="-B /users:/users -B /projappl:/projappl -B /scratch:/scratch -B $TMPDIR:$TMPDIR"
 
 export HF_DATASETS_CACHE=$TMPDIR/datasets/
-# export HF_METRICS_CACHE=/scratch/dac/mvsjober/hf/metrics/
-# export HF_MODULES_CACHE=/scratch/dac/mvsjober/hf/modules/
 
 RDZV_HOST=$(hostname)
 RDZV_PORT=29400
-
-SING_IMAGE=/scratch/project_2001659/mvsjober/singularity/pytorch_a50a389.sif
-#SING_IMAGE=/scratch/project_2001659/mvsjober/singularity/pytorch_38ac9e6.sif
-SING_FLAGS="-B /users:/users -B /projappl:/projappl -B /scratch:/scratch -B $TMPDIR:$TMPDIR"
-
-# rm -rf /scratch/dac/mvsjober/hf/output/*
 
 set -x
 
